@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <title>Calculateur de prix 3D</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #fff;
+      --ink: #111;
+      --muted: #666;
+      --line: #ddd;
+      --accent: #b80000;
+      --white: #fff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      width: min(680px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 44px 0;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin-bottom: 30px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .logo {
+      display: block;
+      width: 190px;
+      height: auto;
+    }
+
+    main { padding-top: 0; }
+
+    .intro { max-width: 660px; }
+
+    .eyebrow {
+      margin: 0 0 15px;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 600px;
+      margin: 0;
+      font-size: clamp(30px, 5vw, 38px);
+      font-weight: 600;
+      line-height: 1.15;
+    }
+
+    h1 span { color: var(--accent); }
+
+    .intro-copy {
+      max-width: 480px;
+      margin: 17px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.65;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(300px, .9fr);
+      gap: clamp(36px, 8vw, 92px);
+      align-items: start;
+      margin-top: 55px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .section-index {
+      color: var(--muted);
+      font-family: Georgia, serif;
+      font-size: 14px;
+    }
+
+    .fields { margin: 0; padding: 0; list-style: none; }
+
+    .field {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 180px;
+      gap: 16px;
+      align-items: center;
+      padding: 21px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .field label {
+      display: block;
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .field small {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .input-wrap {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    input {
+      width: 100%;
+      height: 46px;
+      padding: 0 12px;
+      border: 1px solid #cbd3cb;
+      border-radius: 6px;
+      outline: none;
+      background: var(--white);
+      color: var(--ink);
+      font: inherit;
+      font-size: 15px;
+      font-variant-numeric: tabular-nums;
+      transition: border-color .18s, box-shadow .18s;
+    }
+
+    input[type="number"] {
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      margin: 0;
+      -webkit-appearance: none;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgb(184 0 0 / 13%);
+    }
+
+    .unit {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .unit-select {
+      height: 46px;
+      padding: 0 8px;
+      border: 1px solid #cbd3cb;
+      border-radius: 6px;
+      background: var(--white);
+      color: var(--ink);
+      font: inherit;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .estimate { padding-top: 2px; }
+
+    .estimate-kicker {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .total-panel {
+      position: relative;
+      overflow: hidden;
+      padding: 25px 26px 27px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: var(--white);
+    }
+
+    .total-label {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      color: rgb(255 255 255 / 76%);
+      font-size: 13px;
+    }
+
+    .total {
+      position: relative;
+      z-index: 1;
+      display: block;
+      margin-top: 12px;
+      color: var(--white);
+      font-size: clamp(42px, 6vw, 58px);
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+
+    .export-tools {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      margin-top: 16px;
+    }
+
+    .export-tools label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .export-tools button {
+      min-height: 44px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 6px;
+      background: var(--accent);
+      color: var(--white);
+      font: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .export-tools button:hover { background: #990000; }
+    .export-tools button:focus-visible,
+    .export-tools select:focus-visible {
+      outline: 3px solid rgb(184 0 0 / 25%);
+      outline-offset: 2px;
+    }
+
+    .export-status {
+      min-height: 1.25em;
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .total-caption {
+      margin: 10px 0 0;
+      color: rgb(255 255 255 / 68%);
+      font-size: 12px;
+    }
+
+    .breakdown { margin: 24px 0 0; }
+
+    .breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    .breakdown-row dt { color: var(--muted); }
+    .breakdown-row dd {
+      margin: 0;
+      font-weight: 650;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .rate-note {
+      margin: 19px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      margin-top: 66px;
+      padding-top: 17px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    @media (max-width: 720px) {
+      .page { width: min(100% - 36px, 520px); padding-top: 22px; }
+      main { padding-top: 48px; }
+      .workspace { grid-template-columns: 1fr; gap: 39px; margin-top: 39px; }
+      .field { grid-template-columns: minmax(0, 1fr) 160px; gap: 12px; }
+      .total { font-size: 52px; }
+      footer { margin-top: 45px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <svg class="logo" viewBox="0 0 560 125" role="img" aria-label="KEAO">
+        <path fill="#c90000" d="M0 0h30v49h39L97 0h35L89 61l44 64H98L69 80H30v45H0z"/>
+        <path fill="#c90000" d="M150 0h124l-16 29h-78v19h73v28h-73v20h94l-16 29H150z"/>
+        <path fill="#080808" d="M293 0h124v125h-29V29h-66v96h-29z M322 48h66v28h-66z"/>
+        <path fill="#080808" fill-rule="evenodd" d="M435 0h125v125H435z M465 29v67h65V29z"/>
+      </svg>
+    </header>
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <h1 id="page-title">Estimation du prix d'une ou plusieurs pièces en impression 3D</h1>
+      </section>
+
+      <div class="workspace">
+        <section>
+          <form id="estimate-form" class="fields">
+            <div class="field">
+              <div>
+                <label for="quantity">Quantité de pièces</label>
+              </div>
+              <div class="input-wrap">
+                <input id="quantity" name="quantity" type="number" min="1" step="1" value="1" inputmode="numeric">
+                <span class="unit">pièce(s)</span>
+              </div>
+            </div>
+            <div class="field">
+              <div>
+                <label for="estimate-title">Titre de l'estimation</label>
+              </div>
+              <div class="input-wrap">
+                <input id="estimate-title" name="estimate-title" type="text" placeholder="Titre de votre choix" autocomplete="off">
+              </div>
+            </div>
+            <div class="field">
+              <div>
+                <label for="modeling-hours">Temps de modélisation 3D</label>
+              </div>
+              <div class="input-wrap">
+                <input id="modeling-hours" name="modeling-hours" type="text" value="0.00" inputmode="decimal" autocomplete="off">
+                <select id="modeling-unit" name="modeling-unit" class="unit-select" aria-label="Unité du temps de modélisation">
+                  <option value="hours">Heures</option>
+                  <option value="minutes">Minutes</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <div>
+                <label for="printing-hours">Temps d'impression 3D</label>
+              </div>
+              <div class="input-wrap">
+                <input id="printing-hours" name="printing-hours" type="text" value="0.00" inputmode="decimal" autocomplete="off">
+                <select id="printing-unit" name="printing-unit" class="unit-select" aria-label="Unité du temps d'impression">
+                  <option value="hours">Heures</option>
+                  <option value="minutes">Minutes</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <div>
+                <label for="postprocessing-hours">Main-d'oeuvre</label>
+              </div>
+              <div class="input-wrap">
+                <input id="postprocessing-hours" name="postprocessing-hours" type="text" value="0.00" inputmode="decimal" autocomplete="off">
+                <select id="postprocessing-unit" name="postprocessing-unit" class="unit-select" aria-label="Unité du temps de post-traitement">
+                  <option value="hours">Heures</option>
+                  <option value="minutes">Minutes</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <div>
+                <label for="material-weight">Poids de la pièce</label>
+              </div>
+              <div class="input-wrap">
+                <input id="material-weight" name="material-weight" type="number" min="0" step="1" value="0" inputmode="decimal">
+                <span class="unit">grammes</span>
+              </div>
+            </div>
+            <div class="field">
+              <div>
+                <label for="spool-price">Prix de la bobine</label>
+              </div>
+              <div class="input-wrap">
+                <input id="spool-price" name="spool-price" type="number" min="0" step="0.01" value="0" inputmode="decimal">
+                <span class="unit">€</span>
+              </div>
+            </div>
+            <div class="field">
+              <div>
+                <label for="spool-weight">Poids de la bobine</label>
+              </div>
+              <div class="input-wrap">
+                <input id="spool-weight" name="spool-weight" type="number" min="0" step="0.01" value="0" inputmode="decimal">
+                <span class="unit">kg</span>
+              </div>
+            </div>
+          </form>
+        </section>
+
+        <section class="estimate" aria-live="polite">
+          <div class="total-panel">
+            <p class="total-label">Prix total estimé</p>
+            <output class="total" id="total" for="quantity modeling-hours modeling-unit printing-hours printing-unit postprocessing-hours postprocessing-unit material-weight spool-price spool-weight">0,00 €</output>
+          </div>
+          <p class="rate-note">Marge d'échec / rebuts : 5 % sur les coûts de matière et d'impression 3D.</p>
+          <div class="export-tools">
+            <label for="export-format">Format</label>
+            <select id="export-format" class="unit-select">
+              <option value="png">PNG</option>
+              <option value="jpg">JPG</option>
+              <option value="pdf">PDF</option>
+              <option value="json">JSON</option>
+            </select>
+            <button id="export-button" type="button">Exporter</button>
+          </div>
+          <p id="export-status" class="export-status" aria-live="polite"></p>
+        </section>
+      </div>
+    </main>
+
+  </div>
+
+  <script>
+    const form = document.querySelector("#estimate-form");
+    const currency = new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "EUR",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+    const readValue = (name) => {
+      const value = Number(form.elements[name].value);
+      return Number.isFinite(value) && value > 0 ? value : 0;
+    };
+
+    const readDurationInHours = (valueName, unitName) => {
+      const raw = form.elements[valueName].value.trim().replace(",", ".");
+      if (raw === "") return 0;
+
+      if (form.elements[unitName].value === "minutes") {
+        const minutes = Number(raw);
+        return Number.isFinite(minutes) && minutes > 0 ? minutes / 60 : 0;
+      }
+
+      const parts = raw.match(/^(\d+)(?:\.(\d{1,2}))?$/);
+      if (!parts) return 0;
+
+      const hours = Number(parts[1]);
+      const minutes = Number((parts[2] || "").padEnd(2, "0") || 0);
+      return minutes < 60 ? hours + minutes / 60 : 0;
+    };
+
+    const getEstimate = () => {
+      const modelingHours = readDurationInHours("modeling-hours", "modeling-unit");
+      const printingHours = readDurationInHours("printing-hours", "printing-unit");
+      const postprocessingHours = readDurationInHours("postprocessing-hours", "postprocessing-unit");
+      const quantity = Math.max(1, Math.floor(readValue("quantity")));
+      const modelingCost = modelingHours * 30;
+      const spoolWeight = readValue("spool-weight");
+      const materialWeightKg = readValue("material-weight") / 1000;
+      const materialCost = spoolWeight > 0
+        ? materialWeightKg * readValue("spool-price") / spoolWeight * quantity
+        : 0;
+      const printingCost = printingHours * 2 * quantity;
+      const postprocessingCost = postprocessingHours * 30 * quantity;
+      const scrapRate = 0.05;
+      const scrapCost = (materialCost + printingCost) * scrapRate;
+      const modelingTimeValue = form.elements["modeling-hours"].value.trim() || "0";
+      const printingTimeValue = form.elements["printing-hours"].value.trim() || "0";
+      const postprocessingTimeValue = form.elements["postprocessing-hours"].value.trim() || "0";
+      const customTitle = form.elements["estimate-title"].value.trim();
+
+      return {
+        title: customTitle ? `Estimation - ${customTitle}` : "Estimation",
+        quantity,
+        modelingTime: `${modelingTimeValue} ${form.elements["modeling-unit"].value === "hours" ? "h" : "min"}`,
+        printingTime: `${printingTimeValue} ${form.elements["printing-unit"].value === "hours" ? "h" : "min"}`,
+        postprocessingTime: `${postprocessingTimeValue} ${form.elements["postprocessing-unit"].value === "hours" ? "h" : "min"}`,
+        materialWeightGrams: readValue("material-weight"),
+        spoolPrice: readValue("spool-price"),
+        spoolWeightKg: spoolWeight,
+        modelingCost: Number(modelingCost.toFixed(2)),
+        printingCost: Number(printingCost.toFixed(2)),
+        materialCost: Number(materialCost.toFixed(2)),
+        postprocessingCost: Number(postprocessingCost.toFixed(2)),
+        scrapRatePercent: 5,
+        scrapCost: Number(scrapCost.toFixed(2)),
+        total: Number((modelingCost + materialCost + printingCost + postprocessingCost + scrapCost).toFixed(2))
+      };
+    };
+
+    const updateEstimate = () => {
+      document.querySelector("#total").textContent = currency.format(getEstimate().total);
+    };
+
+    const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#39;"
+    })[character]);
+
+    const createPrintDocument = (estimate) => {
+      const logo = document.querySelector(".logo").outerHTML;
+      const rows = [
+        ["Quantité", `${estimate.quantity} pièce(s)`],
+        ["Modélisation 3D", estimate.modelingTime],
+        ["Impression 3D", estimate.printingTime],
+        ["Main-d'oeuvre", estimate.postprocessingTime],
+        ["Poids de la pièce", `${estimate.materialWeightGrams} g`],
+        ["Prix de la bobine", currency.format(estimate.spoolPrice)],
+        ["Poids de la bobine", `${estimate.spoolWeightKg} kg`],
+        ["Échecs / rebuts · 5 %", currency.format(estimate.scrapCost)]
+      ].map(([label, value]) => `<div class="row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
+
+      return `<!doctype html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(estimate.title)}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 48px; color: #111; font: 16px Arial, Helvetica, sans-serif; }
+  .sheet { width: min(100%, 720px); margin: 0 auto; }
+  .logo { display: block; width: 190px; height: auto; margin-bottom: 42px; }
+  h1 { margin: 0 0 28px; font-size: 28px; }
+  .row { display: flex; justify-content: space-between; gap: 24px; padding: 15px 0; border-bottom: 1px solid #ddd; }
+  .row span { color: #555; }
+  .row strong { text-align: right; }
+  .total { margin-top: 36px; padding: 24px; border-radius: 6px; background: #b80000; color: white; }
+  .total span { display: block; margin-bottom: 10px; }
+  .total strong { font-size: 36px; }
+  @media print { body { padding: 0; } .sheet { width: 100%; } }
+</style></head><body><main class="sheet">${logo}<h1>${escapeHtml(estimate.title)}</h1>${rows}<div class="total"><span>Prix total estimé</span><strong>${escapeHtml(currency.format(estimate.total))}</strong></div></main></body></html>`;
+    };
+
+    const saveBlob = async (blob, fileName, mimeType, extension, description) => {
+      if (typeof window.showSaveFilePicker === "function") {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: fileName,
+          types: [{ description, accept: { [mimeType]: [`.${extension}`] } }]
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    };
+
+    const createImageBlob = async (estimate, format) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1200;
+      canvas.height = 900;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("L'export image n'est pas disponible.");
+
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.fillStyle = "#b80000";
+      context.fillRect(0, 0, canvas.width, 14);
+
+      const logoBlob = new Blob([new XMLSerializer().serializeToString(document.querySelector(".logo"))], { type: "image/svg+xml" });
+      const logoUrl = URL.createObjectURL(logoBlob);
+      const logoImage = new Image();
+      logoImage.src = logoUrl;
+      await logoImage.decode();
+      context.drawImage(logoImage, 80, 58, 250, 56);
+      URL.revokeObjectURL(logoUrl);
+
+      context.fillStyle = "#111111";
+      context.font = "600 42px Arial, Helvetica, sans-serif";
+      context.fillText(estimate.title, 80, 190, 1040);
+
+      const rows = [
+        ["Quantité", `${estimate.quantity} pièce(s)`],
+        ["Modélisation 3D", estimate.modelingTime],
+        ["Impression 3D", estimate.printingTime],
+        ["Main-d'oeuvre", estimate.postprocessingTime],
+        ["Poids de la pièce", `${estimate.materialWeightGrams} g`],
+        ["Prix de la bobine", currency.format(estimate.spoolPrice)],
+        ["Poids de la bobine", `${estimate.spoolWeightKg} kg`],
+        ["Échecs / rebuts · 5 %", currency.format(estimate.scrapCost)]
+      ];
+
+      context.font = "24px Arial, Helvetica, sans-serif";
+      rows.forEach(([label, value], index) => {
+        const y = 270 + index * 52;
+        context.fillStyle = "#666666";
+        context.textAlign = "left";
+        context.fillText(label, 80, y);
+        context.fillStyle = "#111111";
+        context.textAlign = "right";
+        context.fillText(value, 1120, y);
+        context.strokeStyle = "#dddddd";
+        context.beginPath();
+        context.moveTo(80, y + 18);
+        context.lineTo(1120, y + 18);
+        context.stroke();
+      });
+
+      context.fillStyle = "#b80000";
+      context.fillRect(80, 720, 1040, 120);
+      context.textAlign = "left";
+      context.fillStyle = "#ffffff";
+      context.font = "22px Arial, Helvetica, sans-serif";
+      context.fillText("Prix total estimé", 108, 765);
+      context.font = "bold 44px Arial, Helvetica, sans-serif";
+      context.fillText(currency.format(estimate.total), 108, 817);
+
+      const mimeType = format === "jpg" ? "image/jpeg" : "image/png";
+      const blob = await new Promise((resolve) => canvas.toBlob(resolve, mimeType, 0.94));
+      if (!blob) throw new Error("Impossible de créer l'image.");
+      return blob;
+    };
+
+    document.querySelector("#export-button").addEventListener("click", async () => {
+      const format = document.querySelector("#export-format").value;
+      const status = document.querySelector("#export-status");
+      const estimate = getEstimate();
+      const date = new Date().toISOString().slice(0, 10);
+      const baseName = `keao-estimation-${date}`;
+      const button = document.querySelector("#export-button");
+
+      if (format === "pdf") {
+        const printWindow = window.open("", "_blank");
+        if (!printWindow) {
+          status.textContent = "Autorisez l'ouverture de la fenêtre d'impression pour créer le PDF.";
+          return;
+        }
+        printWindow.document.open();
+        printWindow.document.write(createPrintDocument(estimate));
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        status.textContent = "Choisissez « Enregistrer en PDF » dans la fenêtre d'impression.";
+        return;
+      }
+
+      button.disabled = true;
+      status.textContent = "Préparation de l'export…";
+      try {
+        let blob;
+        let mimeType;
+        let description;
+        if (format === "json") {
+          mimeType = "application/json";
+          description = "Estimation JSON";
+          blob = new Blob([JSON.stringify({
+            version: 1,
+            createdAt: new Date().toISOString(),
+            title: estimate.title,
+            quantity: estimate.quantity,
+            modelingTime: { value: form.elements["modeling-hours"].value, unit: form.elements["modeling-unit"].value },
+            printingTime: { value: form.elements["printing-hours"].value, unit: form.elements["printing-unit"].value },
+            postprocessingTimePerPiece: { value: form.elements["postprocessing-hours"].value, unit: form.elements["postprocessing-unit"].value, rateEurPerHour: 30 },
+            material: {
+              pieceWeightGrams: estimate.materialWeightGrams,
+              spoolPriceEur: estimate.spoolPrice,
+              spoolWeightKg: estimate.spoolWeightKg
+            },
+            costs: {
+              modelingEur: estimate.modelingCost,
+              printingEur: estimate.printingCost,
+              materialEur: estimate.materialCost,
+              postprocessingEur: estimate.postprocessingCost,
+              scrapRatePercent: estimate.scrapRatePercent,
+              scrapEur: estimate.scrapCost,
+              totalEur: estimate.total
+            }
+          }, null, 2)], { type: mimeType });
+        } else {
+          mimeType = format === "jpg" ? "image/jpeg" : "image/png";
+          description = format === "jpg" ? "Image JPEG" : "Image PNG";
+          blob = await createImageBlob(estimate, format);
+        }
+
+        await saveBlob(blob, `${baseName}.${format}`, mimeType, format, description);
+        status.textContent = "Export terminé.";
+      } catch (error) {
+        status.textContent = error.name === "AbortError" ? "Export annulé." : "L'export a échoué. Réessayez.";
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    form.addEventListener("input", updateEstimate);
+    form.addEventListener("change", updateEstimate);
+    updateEstimate();
+  </script>
+</body>
+</html>
